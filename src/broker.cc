@@ -2,15 +2,12 @@
 
 #include "broker.h"
 
-Broker::Broker(bool testnet)
-    : ctx_(ssl::context::tlsv12_client), web_(ioc_, ctx_), testnet_(testnet) {}
+Broker::Broker(bool testnet) : ctx_(ssl::context::tlsv12_client), web_(ioc_, ctx_), testnet_(testnet) {}
 
 Broker::~Broker() {}
 
-bool Broker::EstablishConnection()
-{
-  try
-  {
+bool Broker::EstablishConnection() {
+  try {
     tcp::resolver resolver{ioc_};
 
     auto const results = resolver.resolve(host_, "https");
@@ -21,26 +18,21 @@ bool Broker::EstablishConnection()
     web_.next_layer().set_option(option);
 
     web_.handshake(ssl::stream_base::client);
-  }
-  catch (std::exception &e)
-  {
+  } catch (std::exception& e) {
     spdlog::error(e.what());
     return false;
   }
   return true;
 }
 
-std::string Broker::ReadChunk(websocket::stream<beast::ssl_stream<tcp::socket>> &ws)
-{
+std::string Broker::ReadChunk(websocket::stream<beast::ssl_stream<tcp::socket>>& ws) {
   buffer_.consume(buffer_.size());
   ws.read(buffer_);
-  return std::string(boost::asio::buffer_cast<char const *>(beast::buffers_front(buffer_.data())), boost::asio::buffer_size(buffer_.data()));
+  return std::string(boost::asio::buffer_cast<char const*>(beast::buffers_front(buffer_.data())), boost::asio::buffer_size(buffer_.data()));
 }
 
-void Broker::Run(void)
-{
-  while (true)
-  {
+void Broker::Run(void) {
+  while (true) {
     net::io_context ioc;
     boost::asio::ip::tcp::endpoint ep;
     ssl::context ctx{ssl::context::tlsv12_client};
@@ -60,17 +52,13 @@ void Broker::Run(void)
     ws.handshake(host_, endpoint_);
 
     SendPrologue(ws);
-    try
-    {
+    try {
       int flags = 0;
-      while (true)
-      {
+      while (true) {
         std::string c = ReadChunk(ws);
         Parse(c);
       }
-    }
-    catch (std::exception &e)
-    {
+    } catch (std::exception& e) {
       spdlog::error(e.what());
     }
   }

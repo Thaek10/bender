@@ -22,14 +22,9 @@ using tcp = boost::asio::ip::tcp;       // from <boost/asio/ip/tcp.hpp>
 
 namespace json = rapidjson;
 
-enum Instance
-{
-  PROD,
-  TESTNET
-};
+enum Instance { PROD, TESTNET };
 
-class Broker
-{
+class Broker {
 
 public:
   Broker(bool testnet);
@@ -39,12 +34,12 @@ public:
   void Run(void);
 
 protected:
-  std::string ReadChunk(websocket::stream<beast::ssl_stream<tcp::socket>> &ws);
-  virtual void SendPrologue(websocket::stream<beast::ssl_stream<tcp::socket>> &ws) = 0;
-  virtual void Parse(const std::string &recbuf) = 0;
+  std::string ReadChunk(websocket::stream<beast::ssl_stream<tcp::socket>>& ws);
+  virtual void SendPrologue(websocket::stream<beast::ssl_stream<tcp::socket>>& ws) = 0;
+  virtual void Parse(const std::string& recbuf) = 0;
 
-  char *host_;
-  char *endpoint_;
+  char* host_;
+  char* endpoint_;
   std::string instance_name_;
   bool testnet_;
 
