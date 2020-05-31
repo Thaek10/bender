@@ -22,7 +22,7 @@ jobs:
         pip3 install conan
         conan --version
     - name: Conan install
-      run: cd build && conan install . --build missing
+      run: cd build && conan install .. --build missing
     - name: cmake
       run: cd build && cmake ..
     - name: make
