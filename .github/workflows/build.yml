@@ -22,11 +22,8 @@ jobs:
         pip3 install conan
         conan --version
     - name: Conan install
-      working-directory: build
-      run: conan install .. --build missing
+      run: cd build && conan install . --build missing
     - name: cmake
-      working-directory: build
-      run: cmake ..
+      run: cd build && cmake ..
     - name: make
-      working-directory: build
-      run: make
+      run: cd build && make
