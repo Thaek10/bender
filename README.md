@@ -8,6 +8,7 @@ We use the conan package manager to handle dependencies.
 ```bash
 cd build
 conan install .. --build missing
-cmake
+cmake ..
+make
 ./bin/bender
 ```
