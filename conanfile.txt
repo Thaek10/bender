@@ -1,0 +1,8 @@
+[requires]
+spdlog/1.6.0
+abseil/20200225.2
+boost/1.73.0
+rapidjson/1.1.0
+
+[generators]
+cmake
