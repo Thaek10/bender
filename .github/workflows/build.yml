@@ -1,0 +1,28 @@
+name: Bender CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Download Conan
+      run: |
+        pip3 install conan
+        conan --version
+    - name: Conan install
+      working-directory: build
+      run: conan install .. --build missing
+    - name: cmake
+      working-directory: build
+      run: cmake ..
+    - name: make
+      working-directory: build
+      run: make
