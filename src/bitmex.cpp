@@ -62,7 +62,8 @@ void BitMexTap::ParseTrade(const json::Document& doc) {
     t.grossValue = c["grossValue"].GetInt();
     t.homeNotional = c["homeNotional"].GetDouble();
     t.foreignNotional = c["foreignNotional"].GetInt();
-    spdlog::info(t.String());
+    // spdlog::info(t.String());
+    trade_signals(t);
   }
 }
 

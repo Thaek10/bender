@@ -7,17 +7,23 @@
 #include <boost/beast/ssl/ssl_stream.hpp>
 #include <boost/beast/websocket.hpp>
 #include <boost/beast/websocket/ssl.hpp>
+#include <functional>
 #include <string>
+
+#include <boost/signals2.hpp>
 
 #include "broker.h"
 #include "types/bitmex/trade.h"
 
 namespace bitmex {
+
 class BitMexTap : public Broker {
 public:
   BitMexTap(bool testnet);
 
   std::string Sign(const std::string& data);
+
+  void Connect(void* method);
 
 private:
   void SendPrologue(websocket::stream<beast::ssl_stream<tcp::socket>>& ws);
@@ -39,5 +45,8 @@ private:
   inline static char name[] = "BitMex";
 
   bool testnet_;
+
+public:
+  boost::signals2::signal<void(const Trade&)> trade_signals;
 };
-}
+} // namespace bitmex

@@ -2,6 +2,8 @@
 #include <iostream>
 
 #include "bitmex.h"
+#include "printer.h"
+#include "types/bitmex/trade.h"
 
 void print_art() {
   spdlog::info("      _");
@@ -24,9 +26,15 @@ void print_art() {
   spdlog::info("     \"\"\"");
 }
 
+void do_print(const bitmex::Trade& t) { spdlog::info(">" + t.String()); }
+
 int main() {
-  std::cout << "Hello World!";
+  using namespace std::placeholders;
   print_art();
   bitmex::BitMexTap bitmex = bitmex::BitMexTap(false);
+
+  auto t = bitmex::Trade();
+  Printer<bitmex::Trade> printer("trade", true);
+  bitmex.trade_signals.connect(printer);
   bitmex.Run();
 }
