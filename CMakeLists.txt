@@ -18,5 +18,5 @@ endif()
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup()
 
-add_executable(bender src/bender.cpp src/bitmex.cpp src/broker.cpp)
+add_executable(bender src/bender.cpp src/bitmex.cpp src/broker.cpp src/candle.cpp)
 target_link_libraries(bender "crypto" "ssl" ${CONAN_LIBS})

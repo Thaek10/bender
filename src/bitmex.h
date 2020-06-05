@@ -23,8 +23,6 @@ public:
 
   std::string Sign(const std::string& data);
 
-  void Connect(void* method);
-
 private:
   void SendPrologue(websocket::stream<beast::ssl_stream<tcp::socket>>& ws);
   void Parse(const std::string& recbuf);
