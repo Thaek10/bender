@@ -9,9 +9,11 @@ void CandleMaker::Receive(const bitmex::Trade& trade) {
   duration<double> span = duration_cast<duration<double>>(now - start_of_period);
 
   if (span.count() > seconds_) {
-    Candle c = Candle(open, high, low, close, volume);
-    candle_signals(c);
-    open = high = low = close = volume = 0;
+    if (open) {
+      Candle c = Candle(open, high, low, close, volume);
+      candle_signals(c);
+      open = high = low = close = volume = 0;
+    }
   }
   if (!open) {
     open = trade.price;

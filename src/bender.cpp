@@ -32,17 +32,18 @@ void do_print(const bitmex::Trade& t) { spdlog::info(">" + t.String()); }
 int main() {
   using namespace std::placeholders;
   print_art();
-  bitmex::BitMexTap bitmex = bitmex::BitMexTap(false);
+  auto bitmex = std::make_shared<bitmex::BitMexTap>(false);
+  bitmex->Run();
   CandleMaker candles = CandleMaker(5);
 
   auto t = bitmex::Trade();
   Printer<bitmex::Trade> printer("trade", true);
   Printer<Candle> candle_printer("candle", true);
 
-  bitmex.trade_signals.connect(printer);
-  bitmex.trade_signals.connect(std::bind(&CandleMaker::Receive, &candles, std::placeholders::_1));
+  bitmex->trade_signals.connect(printer);
+  bitmex->trade_signals.connect(std::bind(&CandleMaker::Receive, &candles, std::placeholders::_1));
 
   candles.candle_signals.connect(candle_printer);
 
-  bitmex.Run();
+  bitmex->Run();
 }

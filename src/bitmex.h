@@ -17,7 +17,7 @@
 
 namespace bitmex {
 
-class BitMexTap : public Broker {
+class BitMexTap : public WebSocketSession {
 public:
   BitMexTap(bool testnet);
 
@@ -27,15 +27,15 @@ private:
   void SendPrologue(websocket::stream<beast::ssl_stream<tcp::socket>>& ws);
   void Parse(const std::string& recbuf);
 
-  beast::http::request<beast::http::string_body> BuildRequest(std::string& url, int side, int size, double price);
+  beast::http::request<beast::http::string_body> BuildRequest(std::string& url, int side, int size,
+                                                              double price);
   bool ParseResponse(int side, int size, float price, std::string& body);
 
   void ParseTrade(const json::Document& doc);
 
-  inline static char TESTNET_HOST[] = "www.bitmex.com";
-  inline static char PROD_HOST[] = "www.bitmex.com";
-  inline static char API_ENDPOINT[] = "/realtime?subscribe=orderBookL2_25:XBTUSD,trade:XBTUSD";
-  // inline static char API_ENDPOINT[] = "/realtime?subscribe=instrument:XBTUSD,trade:XBTUSD";
+  inline static char host_[] = "www.bitmex.com";
+  inline static char port_[] = "443";
+  inline static char path_[] = "/realtime?subscribe=orderBookL2_25:XBTUSD,trade:XBTUSD";
 
   char* apikey_secret_;
   char* apikey_;

@@ -5,11 +5,8 @@
 #include "bitmex.h"
 
 namespace bitmex {
-BitMexTap::BitMexTap(bool testnet) : Broker(testnet) {
-  instance_name_ = testnet_ ? "BitMex Test" : "BitMex Prod";
-  host_ = testnet_ ? TESTNET_HOST : PROD_HOST;
-  endpoint_ = API_ENDPOINT;
-
+BitMexTap::BitMexTap(bool testnet)
+    : WebSocketSession(host_, port_, path_) {
   apikey_secret_ = getenv("BITMEX_APIKEY_SECRET");
   apikey_ = getenv("BITMEX_APIKEY");
 }
@@ -17,12 +14,10 @@ BitMexTap::BitMexTap(bool testnet) : Broker(testnet) {
 std::string BitMexTap::Sign(const std::string& data) {
   unsigned char result[2048];
   unsigned int resultlen;
-  HMAC(EVP_sha256(), apikey_secret_, sizeof apikey_secret_, reinterpret_cast<const unsigned char*>(data.c_str()), data.size(), result,
-       &resultlen);
+  HMAC(EVP_sha256(), apikey_secret_, sizeof apikey_secret_,
+       reinterpret_cast<const unsigned char*>(data.c_str()), data.size(), result, &resultlen);
   return std::string((const char*)result, resultlen);
 }
-
-void BitMexTap::SendPrologue(websocket::stream<beast::ssl_stream<tcp::socket>>& ws) {}
 
 void BitMexTap::Parse(const std::string& recbuf) {
   json::Document doc;

@@ -1,65 +1,66 @@
 #include "spdlog/spdlog.h"
 
 #include "broker.h"
+#include <chrono>
 
-Broker::Broker(bool testnet) : ctx_(ssl::context::tlsv12_client), web_(ioc_, ctx_), testnet_(testnet) {}
-
-Broker::~Broker() {}
-
-bool Broker::EstablishConnection() {
-  try {
-    tcp::resolver resolver{ioc_};
-
-    auto const results = resolver.resolve(host_, "https");
-
-    net::connect(web_.next_layer(), results.begin(), results.end());
-
-    boost::asio::ip::tcp::no_delay option(true);
-    web_.next_layer().set_option(option);
-
-    web_.handshake(ssl::stream_base::client);
-  } catch (std::exception& e) {
-    spdlog::error(e.what());
-    return false;
-  }
-  return true;
+void WebSocketSession::Run() {
+  resolver_.async_resolve(
+      host_, port_, beast::bind_front_handler(&WebSocketSession::OnResolve, shared_from_this()));
+  ioc_.run();
 }
 
-std::string Broker::ReadChunk(websocket::stream<beast::ssl_stream<tcp::socket>>& ws) {
-  buffer_.consume(buffer_.size());
-  ws.read(buffer_);
-  return std::string(boost::asio::buffer_cast<char const*>(beast::buffers_front(buffer_.data())), boost::asio::buffer_size(buffer_.data()));
+void WebSocketSession::OnResolve(beast::error_code ec, tcp::resolver::results_type results) {
+  spdlog::info("OnResolve");
+  if (ec) {
+    spdlog::error("resolve: " + ec.message());
+  }
+
+  beast::get_lowest_layer(ws_).expires_after(std::chrono::seconds(30));
+  beast::get_lowest_layer(ws_).async_connect(
+      results, beast::bind_front_handler(&WebSocketSession::OnConnect, shared_from_this()));
 }
 
-void Broker::Run(void) {
-  while (true) {
-    net::io_context ioc;
-    boost::asio::ip::tcp::endpoint ep;
-    ssl::context ctx{ssl::context::tlsv12_client};
-    tcp::resolver resolver{ioc};
-
-    assert(host_);
-
-    auto const results = resolver.resolve(host_, "https");
-    websocket::stream<beast::ssl_stream<tcp::socket>> ws{ioc, ctx};
-    net::connect(ws.next_layer().next_layer(), results.begin(), results.end());
-    boost::asio::ip::tcp::no_delay option_nodelay(true);
-    ws.next_layer().next_layer().set_option(option_nodelay);
-    boost::asio::socket_base::keep_alive option_keepalive(true);
-    ws.next_layer().next_layer().set_option(option_keepalive);
-    ws.next_layer().handshake(ssl::stream_base::client);
-
-    ws.handshake(host_, endpoint_);
-
-    SendPrologue(ws);
-    try {
-      int flags = 0;
-      while (true) {
-        std::string c = ReadChunk(ws);
-        Parse(c);
-      }
-    } catch (std::exception& e) {
-      spdlog::error(e.what());
-    }
+void WebSocketSession::OnConnect(beast::error_code ec,
+                                 tcp::resolver::results_type::endpoint_type ep) {
+  if (ec) {
+    spdlog::error("connect: " + ec.message());
   }
+  beast::get_lowest_layer(ws_).expires_never();
+
+  std::string host = std::string(host_) + ":" + std::to_string(ep.port());
+  beast::get_lowest_layer(ws_).expires_after(std::chrono::seconds(30));
+  ws_.next_layer().async_handshake(
+      ssl::stream_base::client,
+      beast::bind_front_handler(&WebSocketSession::OnSslHandshake, shared_from_this()));
+}
+
+void WebSocketSession::OnSslHandshake(beast::error_code ec) {
+  if (ec) {
+    spdlog::error("sslhandshake: " + ec.message());
+  }
+  beast::get_lowest_layer(ws_).expires_never();
+  ws_.async_handshake(
+      host_, path_, beast::bind_front_handler(&WebSocketSession::OnHandshake, shared_from_this()));
+}
+void WebSocketSession::OnHandshake(beast::error_code ec) {
+  if (ec) {
+    spdlog::error("handshake: " + ec.message());
+  }
+
+  ws_.async_write(net::buffer("foo"),
+                  beast::bind_front_handler(&WebSocketSession::OnWrite, shared_from_this()));
+}
+
+void WebSocketSession::OnWrite(beast::error_code ec, std::size_t bytes) {
+  if (ec) {
+    spdlog::error("write: " + ec.message());
+  }
+  ws_.async_read(buffer_, beast::bind_front_handler(&WebSocketSession::OnRead, shared_from_this()));
+}
+
+void WebSocketSession::OnRead(beast::error_code ec, std::size_t bytes) {
+  if (ec) {
+    spdlog::error("read: " + ec.message());
+  }
+  spdlog::info(boost::beast::buffers_to_string(buffer_.data()));
 }
