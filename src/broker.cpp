@@ -47,14 +47,6 @@ void WebSocketSession::OnHandshake(beast::error_code ec) {
     spdlog::error("handshake: " + ec.message());
   }
 
-  ws_.async_write(net::buffer("foo"),
-                  beast::bind_front_handler(&WebSocketSession::OnWrite, shared_from_this()));
-}
-
-void WebSocketSession::OnWrite(beast::error_code ec, std::size_t bytes) {
-  if (ec) {
-    spdlog::error("write: " + ec.message());
-  }
   ws_.async_read(buffer_, beast::bind_front_handler(&WebSocketSession::OnRead, shared_from_this()));
 }
 
@@ -62,5 +54,8 @@ void WebSocketSession::OnRead(beast::error_code ec, std::size_t bytes) {
   if (ec) {
     spdlog::error("read: " + ec.message());
   }
-  spdlog::info(boost::beast::buffers_to_string(buffer_.data()));
+  auto data = boost::beast::buffers_to_string(buffer_.data());
+  Parse(data);
+  buffer_.consume(buffer_.size());
+  ws_.async_read(buffer_, beast::bind_front_handler(&WebSocketSession::OnRead, shared_from_this()));
 }

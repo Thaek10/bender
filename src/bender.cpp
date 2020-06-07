@@ -33,7 +33,6 @@ int main() {
   using namespace std::placeholders;
   print_art();
   auto bitmex = std::make_shared<bitmex::BitMexTap>(false);
-  bitmex->Run();
   CandleMaker candles = CandleMaker(5);
 
   auto t = bitmex::Trade();

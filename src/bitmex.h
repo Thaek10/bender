@@ -31,11 +31,12 @@ private:
                                                               double price);
   bool ParseResponse(int side, int size, float price, std::string& body);
 
-  void ParseTrade(const json::Document& doc);
+  void ParseTrade(const std::string& recbuf, const json::Document& doc);
 
   inline static char host_[] = "www.bitmex.com";
   inline static char port_[] = "443";
-  inline static char path_[] = "/realtime?subscribe=orderBookL2_25:XBTUSD,trade:XBTUSD";
+  // inline static char path_[] = "/realtime?subscribe=orderBookL2_25:XBTUSD,trade:XBTUSD";
+  inline static char path_[] = "/realtime?subscribe=trade:XBTUSD";
 
   char* apikey_secret_;
   char* apikey_;

@@ -34,31 +34,35 @@ void BitMexTap::Parse(const std::string& recbuf) {
     // spdlog::info(recbuf);
   } else if (doc["table"] == "trade") {
     // FIXME
-    ParseTrade(doc);
+    ParseTrade(recbuf, doc);
   } else {
     spdlog::info("BitMex unknown table: " + recbuf);
   }
 }
 
-void BitMexTap::ParseTrade(const json::Document& doc) {
+void BitMexTap::ParseTrade(const std::string& recbuf, const json::Document& doc) {
   const json::Value& data = doc["data"];
   assert(data.IsArray());
 
   for (json::SizeType i = 0; i < data.Size(); i++) {
     const rapidjson::Value& c = data[i];
-    Trade t;
-    t.timestamp = c["timestamp"].GetString();
-    t.symbol = c["symbol"].GetString();
-    t.side = c["side"].GetString();
-    t.size = c["size"].GetInt();
-    t.price = c["price"].GetDouble();
-    t.tickDirection = c["tickDirection"].GetString();
-    t.trdMatchID = c["trdMatchID"].GetString();
-    t.grossValue = c["grossValue"].GetInt();
-    t.homeNotional = c["homeNotional"].GetDouble();
-    t.foreignNotional = c["foreignNotional"].GetInt();
-    // spdlog::info(t.String());
-    trade_signals(t);
+    try {
+      Trade t;
+      t.timestamp = c["timestamp"].GetString();
+      t.symbol = c["symbol"].GetString();
+      t.side = c["side"].GetString();
+      t.size = c["size"].GetInt64();
+      t.price = c["price"].GetDouble();
+      t.tickDirection = c["tickDirection"].GetString();
+      t.trdMatchID = c["trdMatchID"].GetString();
+      t.grossValue = c["grossValue"].GetInt64();
+      t.homeNotional = c["homeNotional"].GetDouble();
+      t.foreignNotional = c["foreignNotional"].GetInt64();
+      trade_signals(t);
+    } catch (const std::exception& e) {
+      spdlog::error(recbuf + " " + e.what());
+      exit(2);
+    }
   }
 }
 
